@@ -1,5 +1,5 @@
 {
-    "name": "dwedaz/nova-custom-dashboard-card",
+    "name": "beyondcode/nova-custom-dashboard-card",
     "description": "A Laravel Nova dashboard card that allows you to build custom dashboards.",
     "keywords": [
         "laravel",

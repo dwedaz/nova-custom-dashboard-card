@@ -1,57 +1,13 @@
 <template>
     <div>
-        <button @click="openModal" class="mb-3 btn btn-default btn-primary">Add Card</button>
-
-        <portal to="modals">
-            <transition name="fade">
-                <modal
-                        v-if="modalOpen"
-                        class="modal"
-                        tabindex="-1"
-                        role="dialog"
-                >
-                    <div class="bg-white rounded-lg shadow-lg overflow-hidden" style="width: 600px">
-                        <div>
-                            <heading :level="2" class="pt-8 px-8">Select Card</heading>
-
-                            <div class="p-8">
-                                <select
-                                        id="cardSelector"
-                                        v-model="selectedCard"
-                                        class="w-full form-control form-select"
-                                >
-                                    <option value="" selected disabled>
-                                        Choose an option
-                                    </option>
-
-                                    <option
-                                            v-for="card in cards"
-                                            :value="card"
-                                            :selected="card === selectedCard">
-                                        {{ card.name || card['card-name'] || card.component }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="bg-30 px-6 py-3 flex">
-                            <div class="flex items-center ml-auto">
-                                <button type="button" @click.prevent="closeModal" class="btn text-80 font-normal h-9 px-3 mr-3 btn-link">Cancel</button>
-
-                                <button @click="addCardToLayout"
-                                        type="submit"
-                                        class="btn btn-default btn-primary"
-                                >
-                                    <span>Add Card</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </modal>
-            </transition>
-        </portal>
+        <div style="display:inline-block;">
+        <button @click="addCardToLayout" class="mb-3 btn btn-default btn-primary">Add Card</button>
+        <v-select multiple v-model="selectedCard" :options="options" style="width:300px;display:inline-block;background-color:white;" class="mb-3" ></v-select>
+        </div>
+        
 
         <div class="-mx-3 mb-3">
+
             <grid-layout
                     :layout="layout"
                     :col-num="12"
@@ -97,26 +53,42 @@
 
 import VueGridLayout from 'vue-grid-layout'
 
-import DynamicCardWrapper from './DynamicCardWrapper';
+import DynamicCardWrapper from './DynamicCardWrapper'
+import vSelect from 'vue-select'
+
+
+
 
 const GridLayout = VueGridLayout.GridLayout;
 const GridItem = VueGridLayout.GridItem;
 
 export default {
     props: ['card'],
-
     components: {
         DynamicCardWrapper,
         GridLayout,
-        GridItem
+        GridItem,
+        vSelect
     },
-
+    computed: {
+      options: function () {
+        var data = [];
+        for (var i=0; i< this.cards.length; i++){
+          data.push( { value: this.cards[i], label: this.cards[i].name ||this.cards[i]['card-name'] || this.cards[i].component} );
+        }
+        return data;
+      }
+    },
     data() {
         return {
             modalOpen: false,
             selectedCard: null,
             cards: [],
             layout: [],
+            item: {
+              value: '',
+              text: ''
+            }
         };
     },
 
@@ -143,23 +115,37 @@ export default {
         },
 
         addCardToLayout(){
-            let card_id = `${this.selectedCard.component}.${this.selectedCard.name}`;
-            let card = {
-                x: 0,
-                y: 0,
-                w: 12,
-                h: 4,
-                i: card_id,
-                card: this.selectedCard
-            };
+            var add = null;
+            for(var j=0; j<this.selectedCard.length; j++ ){
+                add = true;
+                let card_id = this.selectedCard[j].value.component;
+                let card = {
+                    x: 0,
+                    y: 0,
+                    w: 12,
+                    h: 4,
+                    i: card_id,
+                    card: this.selectedCard[j].value
+                };
 
-            this.layout.push(card);
+              
+                for(var i=0 ;i< this.layout.length; i++){
+                  if (this.layout[i].card.component == card.card.component ){
+                    alert("Cant add same card ("+card.card.component+")") 
+                    add = false;
+                  }
+                }
+                if (add){
+                     this.layout.push(card);
+                }
+               
 
-            this.saveLayout(this.layout);
+                this.saveLayout(this.layout);
 
-            this.selectedCard = null;
-
-            this.closeModal();
+               
+            }
+             this.selectedCard = null;
+           
         },
 
         async fetchCards() {
